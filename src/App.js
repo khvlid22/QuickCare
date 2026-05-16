@@ -1,19 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
+import Dashboard from './Dashboard';
 
 function App() {
+  const [session, setSession] = useState(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+    });
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+  }, []);
 
   const handleLogin = async () => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setMessage('خطأ: ' + error.message);
-    } else {
-      setMessage('تم تسجيل الدخول بنجاح!');
     }
   };
+
+  if (session) return <Dashboard />;
 
   return (
     <div style={{ textAlign: 'center', marginTop: '100px' }}>
